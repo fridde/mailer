@@ -1,0 +1,5 @@
+[smtp_settings]
+	host = 'your.smtp.server.com'
+	username = 'info@yourdomain.com'
+	password = 'yourSMTPpassword'
+	from = 'your@adress.com'
