@@ -1,13 +1,13 @@
-<?php 
-	
+<?php
+
 	namespace Fridde;
-	
+
 	class Mailer extends \PHPMailer\PHPMailer\PHPMailer
 	{
 		private $configuration;
 		public $configuration_file = "settings.toml";
 		public $smtp_settings_index = "smtp_settings";
-		
+
 		function __construct ()
 		{
 			parent::__construct();
@@ -22,7 +22,7 @@
 				$this->compose($c_args[0],$c_args[1],$c_args[2],$c_args[3]);
 			}
 		}
-		
+
 		private function initialize()
 		{
 			$def = ["Host", "Username","Password"];
@@ -40,11 +40,11 @@
 					throw new \Exception($arg . " is not set. Mailer won't work without. Check your configurations or use initialize() to set values");
 				}
 			}
-			
+
 			$this->isSMTP();
 			if(isset($GLOBALS["debug"]) && $GLOBALS["debug"] == true){
 				$this->SMTPDebug = 4;
-			} 
+			}
 			else {
 				$this->SMTPDebug = 0;
 			}
@@ -59,15 +59,15 @@
 			* [Summary].
 			*
 			* [Description]
-			
+			*
 			* @param [Type] $[Name] [Argument description]
 			*
 			* @return [type] [name] [description]
-		*/ 
+		*/
 		public function compose(){
 			// to, message, subject, from
 			$args = func_get_args();
-			
+
 			// to
 			if(is_array($args[0])){
 				$this->addAddress($args[0][0], $args[0][1]);
@@ -78,7 +78,7 @@
 			else {
 				throw new \Exception("The recipients adress MUST be set (and valid)!");
 			}
-			
+
 			// message
 			if(isset($args[1]) && is_object($args[1])){
 				$this->msgHTML($args[1]->saveHtml());
@@ -94,7 +94,7 @@
 			}
 			// subject
 			$this->Subject = (isset($args[2]) ? $args[2] : "");
-			
+
 			// from
 			if(isset($args[3]) && is_array($args[3])){
 				$this->setFrom($args[3][0], $args[3][1]);
@@ -111,16 +111,16 @@
 				throw new \Exception("The sender adress is neither predefined nor given!");
 			}
 		}
-		
+
 		/**
 			* [Summary].
 			*
 			* [Description]
-			
+			*
 			* @param [Type] $[Name] [Argument description]
 			*
 			* @return [type] [name] [description]
-		*/ 
+		*/
 		public function setConfiguration()
 		{
 			$file_name = $this->configuration_file;
@@ -138,18 +138,18 @@
 				throw new \Exception("File <" . $file_name . "> not readable or doesn't exist.");
 			}
 			return $configuration;
-		} 
-		
+		}
+
 		/**
 			* [Summary].
 			*
 			* [Description]
-			
+			*
 			* @param [Type] $[Name] [Argument description]
 			*
 			* @return [type] [name] [description]
-		*/ 
-		public function send() 
+		*/
+		public function send()
 		{
 			$success = parent::send();
 			if (!$success) {
@@ -158,4 +158,4 @@
 				echo "Message sent!";
 			}
 		}
-	}																								
+	}

@@ -10,7 +10,6 @@
     ],
     "require": {
         "php": ">=7.0.0",
-        "drewm/mailchimp-api": "^2.1",
         "phpmailer/phpmailer": "^5.2"        
     },
 	"autoload": {
