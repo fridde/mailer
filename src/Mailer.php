@@ -5,13 +5,12 @@
 	class Mailer extends \PHPMailer\PHPMailer\PHPMailer
 	{
 		private $configuration;
-		public $configuration_file = "settings.toml";
 		public $smtp_settings_index = "smtp_settings";
 
-		function __construct ()
+		function __construct ($settings = null)
 		{
 			parent::__construct();
-			$this->setConfiguration();
+			$this->setConfiguration($settings);
 			$this->initialize();
 			$args = func_get_args();
 			if(count($args > 0)){
@@ -27,27 +26,18 @@
 		{
 			$def = ["Host", "Username","Password"];
 			$args = func_get_args();
-			$configuration = (isset($this->configuration[$this->smtp_settings_index]) ? $this->configuration[$this->smtp_settings_index] : null);
+			$configuration = $this->configuration[$this->smtp_settings_index] ?? null;
 			foreach($def as $i => $arg){
 				$conf_variable_name = strtolower($arg);
-				if(isset($configuration[$conf_variable_name])){
-					$this->$arg = $configuration[$conf_variable_name];
-				}
-				else if(isset($args[$i])){
-					$this->$arg = $args[$i];
-				}
-				else {
+				$this->$arg = $configuration[$conf_variable_name] ?? ($args[$i] ?? false);
+				if($this->$arg == false){
 					throw new \Exception($arg . " is not set. Mailer won't work without. Check your configurations or use initialize() to set values");
 				}
 			}
 
 			$this->isSMTP();
-			if(isset($GLOBALS["debug"]) && $GLOBALS["debug"] == true){
-				$this->SMTPDebug = 4;
-			}
-			else {
-				$this->SMTPDebug = 0;
-			}
+			$this->SMTPDebug = $GLOBALS["debug"] ?? 0;
+			$this->SMTPDebug = $this->SMTPDebug === true ? 4 : 0;
 			$this->Debugoutput = 'html';
 			$this->Port = 587;
 			$this->SMTPSecure = 'tsl';
@@ -121,21 +111,11 @@
 			*
 			* @return [type] [name] [description]
 		*/
-		public function setConfiguration()
+		public function setConfiguration($settings = null)
 		{
-			$file_name = $this->configuration_file;
-			$toml_class = "Yosymfony\Toml\Toml";
-			if(is_readable($file_name)){
-				if(class_exists($toml_class)){
-					$parseFunction = $toml_class . "::Parse";
-					$this->configuration = $parseFunction($file_name);
-				}
-				else {
-					throw new \Exception("Tried to parse a toml-configuration file without a parser class defined.");
-				}
-			}
-			else {
-				throw new \Exception("File <" . $file_name . "> not readable or doesn't exist.");
+			$this->configuration = $settings ?? ($GLOBALS["SETTINGS"] ?? false);
+			if($this->configuration === false){
+				throw new \Exception("No settings given or found in the global scope");
 			}
 			return $configuration;
 		}
