@@ -10,7 +10,9 @@
     ],
     "require": {
         "php": ">=7.0.0",
-        "phpmailer/phpmailer": "^5.2"        
+        "phpmailer/phpmailer": "^5.2",
+        "fridde/html": "dev-master",
+        "tijsverkoyen/css-to-inline-styles" : "dev-master"
     },
 	"autoload": {
         "psr-4": { "Fridde\\": "src/" }
