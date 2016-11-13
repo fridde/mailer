@@ -1,141 +1,144 @@
 <?php
 
-	namespace Fridde;
+namespace Fridde;
 
-	class Mailer extends \PHPMailer\PHPMailer\PHPMailer
+use Fridde\HTML as H;
+
+class Mailer extends \PHPMailer\PHPMailer\PHPMailer
+{
+	private $sender;
+	private $receiver;
+	private $settings_attribute_map = ["to" => "receiver", "from" => "sender"];
+	private $smtp_settings_index = "smtp_settings";
+
+	function __construct ($parameters = [])
 	{
-		private $configuration;
-		public $smtp_settings_index = "smtp_settings";
+		parent::__construct();
+		$this->setGlobalOptions();
+		$this->setConfiguration($parameters);
+		$this->initialize();
+	}
 
-		function __construct ($settings = null)
-		{
-			parent::__construct();
-			$this->setConfiguration($settings);
-			$this->initialize();
-			$args = func_get_args();
-			if(count($args > 0)){
-				$c_args = [null, "", "", ""];
-				foreach($args as $k => $arg){
-					$c_args[$k] = $arg;
-				}
-				$this->compose($c_args[0],$c_args[1],$c_args[2],$c_args[3]);
+	private function initialize()
+	{
+		$this->isSMTP();
+		$this->SMTPDebug = $GLOBALS["debug"] == true ? 4 : 0;
+		$this->Debugoutput = 'html';
+		$this->Port = 587;
+		$this->SMTPSecure = 'tsl';
+		$this->SMTPAuth = true;
+		$this->CharSet = 'UTF-8';
+		$this->SMTPOptions['ssl'] = ['verify_peer' => false, 'verify_peer_name' => false, 'allow_self_signed' => true];
+	}
+	/**
+	* [Summary].
+	*
+	* [Description]
+	*
+	* @param [Type] $[Name] [Argument description]
+	*
+	* @return [type] [name] [description]
+	*/
+	public function compose(){
+		$this->validateCrucialAttributes();
+		$this->addAddress($this->receiver);
+
+		if(is_object($this->Body)){
+			$this->msgHTML($this->Body->saveHtml());
+		} else {
+			$message = '<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"></head><body>';
+			$message .= $this->Body . '</body></html>';
+			$this->msgHTML($message);
+		}
+		$this->setFrom($this->sender);
+	}
+
+	private function validateCrucialAttributes()
+	{
+		$crucial_attributes = ["sender", "receiver", "Host", "Password", "Username"];
+		$optional_attributes = ["Subject", "Body"];
+
+		foreach($crucial_attributes as $att_name){
+			if(empty($this->$att_name)){
+				throw new \Exception("The crucial attribute '$att_name' has not been set.");
 			}
 		}
-
-		private function initialize()
+		foreach($optional_attributes as $att_name)
 		{
-			$def = ["Host", "Username","Password"];
-			$args = func_get_args();
-			$configuration = $this->configuration[$this->smtp_settings_index] ?? null;
-			foreach($def as $i => $arg){
-				$conf_variable_name = strtolower($arg);
-				$this->$arg = $configuration[$conf_variable_name] ?? ($args[$i] ?? false);
-				if($this->$arg == false){
-					throw new \Exception($arg . " is not set. Mailer won't work without. Check your configurations or use initialize() to set values");
-				}
-			}
-
-			$this->isSMTP();
-			$this->SMTPDebug = $GLOBALS["debug"] ?? 0;
-			$this->SMTPDebug = $this->SMTPDebug === true ? 4 : 0;
-			$this->Debugoutput = 'html';
-			$this->Port = 587;
-			$this->SMTPSecure = 'tsl';
-			$this->SMTPAuth = true;
-			$this->CharSet = 'UTF-8';
-			$this->SMTPOptions = ['ssl' => ['verify_peer' => false, 'verify_peer_name' => false, 'allow_self_signed' => true]];
-		}
-		/**
-			* [Summary].
-			*
-			* [Description]
-			*
-			* @param [Type] $[Name] [Argument description]
-			*
-			* @return [type] [name] [description]
-		*/
-		public function compose(){
-			// to, message, subject, from
-			$args = func_get_args();
-
-			// to
-			if(is_array($args[0])){
-				$this->addAddress($args[0][0], $args[0][1]);
-			}
-			else if(is_string($args[0]) && strpos($args[0], "@")){
-				$this->addAddress($args[0]);
-			}
-			else {
-				throw new \Exception("The recipients adress MUST be set (and valid)!");
-			}
-
-			// message
-			if(isset($args[1]) && is_object($args[1])){
-				$this->msgHTML($args[1]->saveHtml());
-			}
-			else if(isset($args[1]) && is_string($args[1])){
-				$message = '<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"></head><body>';
-				$message .= $args[1];
-				$message .= '</body></html>';
-				$this->msgHTML($message);
-			}
-			else{
-				$this->msgHTML("");
-			}
-			// subject
-			$this->Subject = (isset($args[2]) ? $args[2] : "");
-
-			// from
-			if(isset($args[3]) && is_array($args[3])){
-				$this->setFrom($args[3][0], $args[3][1]);
-			}
-			else if(isset($args[3])){
-				$this->setFrom($args[3]);
-			}
-			else if(isset($this->configuration[$this->smtp_settings_index]["from"])){
-				$from = explode(";", $this->configuration[$this->smtp_settings_index]["from"]);
-				$from_name = (isset($from[1]) ? $from[1] : "");
-				$this->setFrom($from[0], $from_name);
-			}
-			else{
-				throw new \Exception("The sender adress is neither predefined nor given!");
-			}
-		}
-
-		/**
-			* [Summary].
-			*
-			* [Description]
-			*
-			* @param [Type] $[Name] [Argument description]
-			*
-			* @return [type] [name] [description]
-		*/
-		public function setConfiguration($settings = null)
-		{
-			$this->configuration = $settings ?? ($GLOBALS["SETTINGS"] ?? false);
-			if($this->configuration === false){
-				throw new \Exception("No settings given or found in the global scope");
-			}
-			return $configuration;
-		}
-
-		/**
-			* [Summary].
-			*
-			* [Description]
-			*
-			* @param [Type] $[Name] [Argument description]
-			*
-			* @return [type] [name] [description]
-		*/
-		public function send()
-		{
-			$success = parent::send();
-			if (!$success) {
-				echo "Mailer Error: " . $this->ErrorInfo;
-				} else {
-				echo "Message sent!";
+			if(empty($this->$att_name)){
+				$this->$att_name = "";
 			}
 		}
 	}
+
+	/**
+	* [Summary].
+	*
+	* [Description]
+	*
+	* @param [Type] $[Name] [Argument description]
+	*
+	* @return [type] [name] [description]
+	*/
+	public function setConfiguration($settings = [])
+	{
+		foreach($settings as $key => $value){
+			$attribute_name = $this->settings_attribute_map[$key] ?? $key;
+			if(!property_exists($this, $attribute_name)){
+				$attribute_name = ucfirst($attribute_name);
+			}
+			$this->$attribute_name = $value;
+		}
+	}
+
+
+	/**
+	 * [setGlobalOptions description]
+	 */
+	public function setGlobalOptions()
+	{
+		$global_options = $GLOBALS["SETTINGS"][$this->smtp_settings_index] ?? [];
+		$this->setConfiguration($global_options);
+	}
+
+	/**
+	* [Summary].
+	*
+	* [Description]
+	*
+	* @param [Type] $[Name] [Argument description]
+	*
+	* @return [type] [name] [description]
+	*/
+	public function send()
+	{
+		$this->compose();
+		dump($this);
+		$success = parent::send();
+		if (!$success) {
+			echo "Mailer Error: " . $this->ErrorInfo;
+		} else {
+			echo "Message sent!";
+		}
+	}
+
+	/**
+	 * [addToBody description]
+	 */
+	public function addToBody()
+	{
+		$H = $this->Body ?? new H();
+		$H->add(func_num_args());
+		$this->Body = $H;
+	}
+
+	public function addHeader($header = "", $level = 1)
+	{
+		$this->addToBody("h" . $level, $header);
+	}
+
+	public function addRow($row = "")
+	{
+		$H->addToBody("p", $row);
+	}
+}
