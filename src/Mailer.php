@@ -10,6 +10,7 @@ class Mailer extends \PHPMailer\PHPMailer\PHPMailer
 	private $receiver;
 	private $settings_attribute_map = ["to" => "receiver", "from" => "sender"];
 	private $smtp_settings_index = "smtp_settings";
+	private $html_body;
 
 	function __construct ($parameters = [])
 	{
@@ -93,8 +94,8 @@ class Mailer extends \PHPMailer\PHPMailer\PHPMailer
 
 
 	/**
-	 * [setGlobalOptions description]
-	 */
+	* [setGlobalOptions description]
+	*/
 	public function setGlobalOptions()
 	{
 		$global_options = $GLOBALS["SETTINGS"][$this->smtp_settings_index] ?? [];
@@ -123,13 +124,18 @@ class Mailer extends \PHPMailer\PHPMailer\PHPMailer
 	}
 
 	/**
-	 * [addToBody description]
-	 */
+	* [addToBody description]
+	*/
 	public function addToBody()
 	{
-		$H = $this->Body ?? new H();
-		$H->add(func_num_args());
-		$this->Body = $H;
+		$args = func_get_args();
+		$tag = $args[0] ?? null;
+		$content = $args[1] ?? "";
+		$atts = $args[2] ?? [];
+
+		$H = $this->html_body ?? new H();
+		$H->add($H->body, $tag, $content, $atts);
+		$this->html_body = $H;
 	}
 
 	public function addHeader($header = "", $level = 1)
@@ -139,6 +145,6 @@ class Mailer extends \PHPMailer\PHPMailer\PHPMailer
 
 	public function addRow($row = "")
 	{
-		$H->addToBody("p", $row);
+		$this->addToBody("p", $row);
 	}
 }
