@@ -2,13 +2,14 @@
 
 namespace Fridde;
 
-use PHPMailer\PHPMailer\PHPMailer;
 
-class Mailer extends PHPMailer
+class Mailer extends \PHPMailer\PHPMailer\PHPMailer
 {
 	private $sender;
 	private $receiver;
-	private $settings_attribute_map = ["to" => "receiver", "from" => "sender"];
+
+	// in the form of [local_alias => actual name by PHPMailer]
+	private $attribute_alias = ["to" => "receiver", "from" => "sender"];
 	private $smtp_settings_index = "smtp_settings";
 	private $html_body;
 
@@ -30,26 +31,17 @@ class Mailer extends PHPMailer
 		$this->SMTPAuth = true;
 		$this->CharSet = 'UTF-8';
 		$this->SMTPOptions['ssl'] = ['verify_peer' => false, 'verify_peer_name' => false, 'allow_self_signed' => true];
+		$this->isHTML = true;
 	}
-	/**
-	* [Summary].
-	*
-	* [Description]
-	*
-	* @param [Type] $[Name] [Argument description]
-	*
-	* @return [type] [name] [description]
-	*/
+
 	public function compose(){
 		$this->validateCrucialAttributes();
+		$this->setFrom($this->sender);
 		$this->addAddress($this->receiver);
-
-		if(!empty($this->Body)){
-			$this->msgHTML($this->Body);
-		} else {
+		if(empty($this->Body)){
 			throw new \Exception("The message body can not be empty.");
 		}
-		$this->setFrom($this->sender);
+		$this->msgHTML($this->Body);
 	}
 
 	private function validateCrucialAttributes()
@@ -70,55 +62,49 @@ class Mailer extends PHPMailer
 		}
 	}
 
-	/**
-	* [Summary].
-	*
-	* [Description]
-	*
-	* @param [Type] $[Name] [Argument description]
-	*
-	* @return [type] [name] [description]
-	*/
-	public function setConfiguration($settings = [])
+	private function setConfiguration($settings = [])
 	{
-		foreach($settings as $key => $value){
-			$attribute_name = $this->settings_attribute_map[$key] ?? $key;
-			if(!property_exists($this, $attribute_name)){
-				$attribute_name = ucfirst($attribute_name);
+		array_walk($settings, function($val, $key){
+			$this->set($key, $val);
+		});
+	}
+
+	public function set($attribute, $value = null)
+	{
+		$names_to_check = [$attribute, ucfirst($attribute)];
+		$names_to_check[] = $this->attribute_alias[$attribute] ?? null;
+
+		$valid_attribute = null;
+		foreach($names_to_check as $name){
+			if(property_exists($this, $name)){
+				$valid_attribute = $name;
+				break;
 			}
-			$this->$attribute_name = $value;
 		}
+		if(empty($valid_attribute)){
+			throw new Exception("Tried to set an attribute of the Mailer that doesn't exist.");
+		}
+		$this->$valid_attribute = $value;
 	}
 
 
-	/**
-	* [setGlobalOptions description]
-	*/
+
 	public function setGlobalOptions()
 	{
 		$global_options = $GLOBALS["SETTINGS"][$this->smtp_settings_index] ?? [];
 		$this->setConfiguration($global_options);
 	}
 
-	/**
-	* [Summary].
-	*
-	* [Description]
-	*
-	* @param [Type] $[Name] [Argument description]
-	*
-	* @return [type] [name] [description]
-	*/
+
 	public function send()
 	{
 		$this->compose();
-		dump($this);
-		$success = parent::send();
+		bdump($this);
+		$success = $this->send();
 		if (!$success) {
 			echo "Mailer Error: " . $this->ErrorInfo;
 		} else {
 			echo "Message sent!";
 		}
 	}
-
 }
