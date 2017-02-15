@@ -2,9 +2,9 @@
 
 namespace Fridde;
 
-use Fridde\HTML as H;
+use PHPMailer\PHPMailer\PHPMailer;
 
-class Mailer extends \PHPMailer\PHPMailer\PHPMailer
+class Mailer extends PHPMailer
 {
 	private $sender;
 	private $receiver;
@@ -44,12 +44,10 @@ class Mailer extends \PHPMailer\PHPMailer\PHPMailer
 		$this->validateCrucialAttributes();
 		$this->addAddress($this->receiver);
 
-		if(is_object($this->Body)){
-			$this->msgHTML($this->Body->saveHtml());
+		if(!empty($this->Body)){
+			$this->msgHTML($this->Body);
 		} else {
-			$message = '<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"></head><body>';
-			$message .= $this->Body . '</body></html>';
-			$this->msgHTML($message);
+			throw new \Exception("The message body can not be empty.");
 		}
 		$this->setFrom($this->sender);
 	}
@@ -123,28 +121,4 @@ class Mailer extends \PHPMailer\PHPMailer\PHPMailer
 		}
 	}
 
-	/**
-	* [addToBody description]
-	*/
-	public function addToBody()
-	{
-		$args = func_get_args();
-		$tag = $args[0] ?? null;
-		$content = $args[1] ?? "";
-		$atts = $args[2] ?? [];
-
-		$H = $this->html_body ?? new H();
-		$H->add($H->body, $tag, $content, $atts);
-		$this->html_body = $H;
-	}
-
-	public function addHeader($header = "", $level = 1)
-	{
-		$this->addToBody("h" . $level, $header);
-	}
-
-	public function addRow($row = "")
-	{
-		$this->addToBody("p", $row);
-	}
 }
