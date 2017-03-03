@@ -1,16 +1,17 @@
 <?php
 
 namespace Fridde;
+use PHPMailer;
 
-
-class Mailer extends \PHPMailer\PHPMailer\PHPMailer
+class Mailer extends PHPMailer
 {
-	private $sender;
+
 	private $receiver;
 
 	// in the form of [local_alias => actual name by PHPMailer]
-	private $attribute_alias = ["to" => "receiver", "from" => "sender"];
+	private $attribute_alias = [];
 	private $smtp_settings_index = "smtp_settings";
+	private $attributes_from_settings = ["from", "host", "password", "username"];
 	private $html_body;
 
 	function __construct ($parameters = [])
@@ -24,19 +25,28 @@ class Mailer extends \PHPMailer\PHPMailer\PHPMailer
 	private function initialize()
 	{
 		$this->isSMTP();
-		$this->SMTPDebug = $GLOBALS["debug"] == true ? 4 : 0;
+		$debug = $GLOBALS["debug"] ?? false;
+		$debug = false; // TODO: remove in production
+		$this->SMTPDebug = $debug ? 4 : 0;
 		$this->Debugoutput = 'html';
 		$this->Port = 587;
 		$this->SMTPSecure = 'tsl';
 		$this->SMTPAuth = true;
 		$this->CharSet = 'UTF-8';
 		$this->SMTPOptions['ssl'] = ['verify_peer' => false, 'verify_peer_name' => false, 'allow_self_signed' => true];
-		$this->isHTML = true;
+		$this->isHTML(true);
+
+		// for testing purposes
+		if($GLOBALS["LOCAL_MAILER"] ?? false){
+			$this->Port = 25;
+			$this->Host = "localhost";
+			$this->SMTPAuth = false;
+		}
 	}
 
 	public function compose(){
 		$this->validateCrucialAttributes();
-		$this->setFrom($this->sender);
+		$this->setFrom($this->From);
 		$this->addAddress($this->receiver);
 		if(empty($this->Body)){
 			throw new \Exception("The message body can not be empty.");
@@ -46,7 +56,7 @@ class Mailer extends \PHPMailer\PHPMailer\PHPMailer
 
 	private function validateCrucialAttributes()
 	{
-		$crucial_attributes = ["sender", "receiver", "Host", "Password", "Username"];
+		$crucial_attributes = ["From", "receiver", "Host", "Password", "Username"];
 		$optional_attributes = ["Subject", "Body"];
 
 		foreach($crucial_attributes as $att_name){
@@ -82,7 +92,7 @@ class Mailer extends \PHPMailer\PHPMailer\PHPMailer
 			}
 		}
 		if(empty($valid_attribute)){
-			throw new Exception("Tried to set an attribute of the Mailer that doesn't exist.");
+			throw new \Exception("Tried to set an attribute of the Mailer that doesn't exist: " . $attribute);
 		}
 		$this->$valid_attribute = $value;
 	}
@@ -91,20 +101,19 @@ class Mailer extends \PHPMailer\PHPMailer\PHPMailer
 
 	public function setGlobalOptions()
 	{
-		$global_options = $GLOBALS["SETTINGS"][$this->smtp_settings_index] ?? [];
+		$smtp_settings = SETTINGS[$this->smtp_settings_index] ?? [];
+		$possible_keys = array_flip($this->attributes_from_settings);
+		$global_options = array_intersect_key($smtp_settings, $possible_keys);
 		$this->setConfiguration($global_options);
 	}
 
 
-	public function send()
+	public function sendAway()
 	{
 		$this->compose();
-		bdump($this);
-		$success = $this->send();
-		if (!$success) {
-			echo "Mailer Error: " . $this->ErrorInfo;
-		} else {
-			echo "Message sent!";
+		if(isset($GLOBALS["LOGGER"]) && !is_bool($GLOBALS["LOGGER"])){
+			//$GLOBALS["LOGGER"]->info($this->Body);
 		}
+		return $this->send();
 	}
 }
