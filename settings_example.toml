@@ -2,4 +2,4 @@
 	host = 'your.smtp.server.com'
 	username = 'info@yourdomain.com'
 	password = 'yourSMTPpassword'
-	from = 'your@adress.com'
+	from = 'your@address.com'

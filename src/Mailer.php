@@ -26,7 +26,6 @@ class Mailer extends PHPMailer
 	{
 		$this->isSMTP();
 		$debug = $GLOBALS["debug"] ?? false;
-		$debug = false; // TODO: remove in production
 		$this->SMTPDebug = $debug ? 4 : 0;
 		$this->Debugoutput = 'html';
 		$this->Port = 587;
@@ -47,7 +46,14 @@ class Mailer extends PHPMailer
 	public function compose(){
 		$this->validateCrucialAttributes();
 		$this->setFrom($this->From);
-		$this->addAddress($this->receiver);
+
+		if(!empty($GLOBALS["debug"])){
+			$debug_address = SETTINGS["debug"]["mail"];
+			$this->addAddress($debug_address);
+			$this->Subject = '[' . $this->receiver . '] ' . $this->Subject;
+		} else {
+			$this->addAddress($this->receiver);
+		}
 		if(empty($this->Body)){
 			throw new \Exception("The message body can not be empty.");
 		}
@@ -111,9 +117,7 @@ class Mailer extends PHPMailer
 	public function sendAway()
 	{
 		$this->compose();
-		if(isset($GLOBALS["LOGGER"]) && !is_bool($GLOBALS["LOGGER"])){
-			//$GLOBALS["LOGGER"]->info($this->Body);
-		}
+		//
 		return $this->send();
 	}
 }
