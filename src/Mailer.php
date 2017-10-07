@@ -22,7 +22,7 @@ class Mailer extends PHPMailer
 		$this->initialize();
 	}
 
-	private function initialize()
+	private function initialize($debug = false)
 	{
 		$this->isSMTP();
 		$debug = $GLOBALS["debug"] ?? false;
@@ -43,12 +43,13 @@ class Mailer extends PHPMailer
 		}
 	}
 
-	public function compose(){
+	public function compose($debug_address = null){
 		$this->validateCrucialAttributes();
 		$this->setFrom($this->From);
 
-		if(!empty($GLOBALS["debug"])){
-			$debug_address = SETTINGS["debug"]["mail"];
+        if(!empty($debug_address)){
+		//if(!empty($GLOBALS["debug"])){
+			//$debug_address = SETTINGS["debug"]["mail"];
 			$this->addAddress($debug_address);
 			$this->Subject = '[' . $this->receiver . '] ' . $this->Subject;
 		} else {
@@ -114,10 +115,9 @@ class Mailer extends PHPMailer
 	}
 
 
-	public function sendAway()
+	public function sendAway($debug_address = null)
 	{
-		$this->compose();
-		//
+		$this->compose($debug_address);
 		return $this->send();
 	}
 }
