@@ -12,7 +12,6 @@ class Mailer extends PHPMailer
 	private $attribute_alias = [];
 	private $smtp_settings_index = "smtp_settings";
 	private $attributes_from_settings = ["from", "host", "password", "username"];
-	private $html_body;
 
 	function __construct ($parameters = [])
 	{
@@ -25,7 +24,7 @@ class Mailer extends PHPMailer
 	private function initialize($debug = false)
 	{
 		$this->isSMTP();
-		$debug = $GLOBALS["debug"] ?? false;
+		$debug = DEBUG ?? false;
 		$this->SMTPDebug = $debug ? 4 : 0;
 		$this->Debugoutput = 'html';
 		$this->Port = 587;
@@ -34,13 +33,6 @@ class Mailer extends PHPMailer
 		$this->CharSet = 'UTF-8';
 		$this->SMTPOptions['ssl'] = ['verify_peer' => false, 'verify_peer_name' => false, 'allow_self_signed' => true];
 		$this->isHTML(true);
-
-		// for testing purposes
-		if($GLOBALS["LOCAL_MAILER"] ?? false){
-			$this->Port = 25;
-			$this->Host = "localhost";
-			$this->SMTPAuth = false;
-		}
 	}
 
 	public function compose($debug_address = null){
@@ -48,8 +40,6 @@ class Mailer extends PHPMailer
 		$this->setFrom($this->From);
 
         if(!empty($debug_address)){
-		//if(!empty($GLOBALS["debug"])){
-			//$debug_address = SETTINGS["debug"]["mail"];
 			$this->addAddress($debug_address);
 			$this->Subject = '[' . $this->receiver . '] ' . $this->Subject;
 		} else {
