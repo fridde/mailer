@@ -35,7 +35,8 @@ class Mailer extends PHPMailer
 		$this->isHTML(true);
 	}
 
-	public function compose($debug_address = null){
+	public function compose($debug_address = null)
+    {
 		$this->validateCrucialAttributes();
 		$this->setFrom($this->From);
 
