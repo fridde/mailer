@@ -21,11 +21,11 @@ class Mailer extends PHPMailer
 		$this->initialize();
 	}
 
-	private function initialize($debug = false)
+	private function initialize()
 	{
 		$this->isSMTP();
 		$debug = DEBUG ?? false;
-		$this->SMTPDebug = $debug ? 4 : 0;
+		$this->SMTPDebug = $this->SMTPDebug ?? ($debug ? 4 : 0);
 		$this->Debugoutput = 'html';
 		$this->Port = 587;
 		$this->SMTPSecure = 'tsl';
