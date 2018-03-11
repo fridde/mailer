@@ -10,10 +10,10 @@ class Mailer extends PHPMailer
 
 	// in the form of [local_alias => actual name by PHPMailer]
 	private $attribute_alias = [];
-	private $smtp_settings_index = "smtp_settings";
-	private $attributes_from_settings = ["from", "host", "password", "username"];
+	private $smtp_settings_index = 'smtp_settings';
+	private static $attributes_from_settings = ['from', 'host', 'password', 'username'];
 
-	function __construct ($parameters = [])
+	public function __construct ($parameters = [])
 	{
 		parent::__construct();
 		$this->setGlobalOptions();
@@ -37,7 +37,7 @@ class Mailer extends PHPMailer
 
 	public function compose($debug_address = null)
     {
-		$this->validateCrucialAttributes();
+        //$this->validateCrucialAttributes();
 		$this->setFrom($this->From);
 
         if(!empty($debug_address)){
@@ -47,25 +47,25 @@ class Mailer extends PHPMailer
 			$this->addAddress($this->receiver);
 		}
 		if(empty($this->Body)){
-			throw new \Exception("The message body can not be empty.");
+			throw new \Exception('The message body can not be empty.');
 		}
 		$this->msgHTML($this->Body);
 	}
 
 	private function validateCrucialAttributes()
 	{
-		$crucial_attributes = ["From", "receiver", "Host", "Password", "Username"];
-		$optional_attributes = ["Subject", "Body"];
+		$crucial_attributes = ['From', 'receiver', 'Host', 'Password', 'Username'];
+		$optional_attributes = ['Subject', 'Body'];
 
 		foreach($crucial_attributes as $att_name){
 			if(empty($this->$att_name)){
-				throw new \Exception("The crucial attribute '$att_name' has not been set.");
+				throw new \Exception('The crucial attribute "' . $att_name . '" has not been set.');
 			}
 		}
 		foreach($optional_attributes as $att_name)
 		{
 			if(empty($this->$att_name)){
-				$this->$att_name = "";
+				$this->$att_name = '';
 			}
 		}
 	}
@@ -90,7 +90,7 @@ class Mailer extends PHPMailer
 			}
 		}
 		if(empty($valid_attribute)){
-			throw new \Exception("Tried to set an attribute of the Mailer that doesn't exist: " . $attribute);
+			throw new \Exception('Tried to set an attribute of the Mailer that doesn\'t exist: ' . $attribute);
 		}
 		$this->$valid_attribute = $value;
 	}
@@ -100,7 +100,7 @@ class Mailer extends PHPMailer
 	public function setGlobalOptions()
 	{
 		$smtp_settings = SETTINGS[$this->smtp_settings_index] ?? [];
-		$possible_keys = array_flip($this->attributes_from_settings);
+		$possible_keys = array_flip(self::$attributes_from_settings);
 		$global_options = array_intersect_key($smtp_settings, $possible_keys);
 		$this->setConfiguration($global_options);
 	}
