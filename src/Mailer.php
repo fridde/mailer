@@ -30,7 +30,7 @@ class Mailer extends PHPMailer
 		$this->Port = 587;
 		$this->SMTPSecure = 'tsl';
 		$this->SMTPAuth = true;
-		$this->CharSet = 'UTF-8';
+		$this->CharSet = 'utf-8';
 		$this->SMTPOptions['ssl'] = ['verify_peer' => false, 'verify_peer_name' => false, 'allow_self_signed' => true];
 		$this->isHTML(true);
 	}
