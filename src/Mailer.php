@@ -31,6 +31,7 @@ class Mailer extends PHPMailer
 		$this->SMTPSecure = 'tsl';
 		$this->SMTPAuth = true;
 		$this->CharSet = 'utf-8';
+        $this->Encoding = '8bit';
 		$this->SMTPOptions['ssl'] = ['verify_peer' => false, 'verify_peer_name' => false, 'allow_self_signed' => true];
 		$this->isHTML(true);
 	}
@@ -49,6 +50,7 @@ class Mailer extends PHPMailer
 		if(empty($this->Body)){
 			throw new \Exception('The message body can not be empty.');
 		}
+		$this->setWordWrap();
 		$this->msgHTML($this->Body);
 	}
 
