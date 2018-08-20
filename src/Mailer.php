@@ -79,11 +79,11 @@ class Mailer extends PHPMailer
 	private function setConfiguration(array $settings = [])
 	{
 		array_walk($settings, function($val, $key){
-			$this->set($key, $val);
+			$this->setValue($key, $val);
 		});
 	}
 
-	public function set(string $attribute, $value = null)
+	public function setValue(string $attribute, $value = null): void
 	{
 		$names_to_check = [$attribute, ucfirst($attribute)];
 		$names_to_check[] = $this->attribute_alias[$attribute] ?? null;
