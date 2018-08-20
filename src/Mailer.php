@@ -13,7 +13,7 @@ class Mailer extends PHPMailer
 	private $smtp_settings_index = 'smtp_settings';
 	private static $attributes_from_settings = ['from', 'host', 'password', 'username'];
 
-	public function __construct ($parameters = [])
+	public function __construct (array $parameters = [])
 	{
 		parent::__construct();
 		$this->setGlobalOptions();
@@ -21,7 +21,7 @@ class Mailer extends PHPMailer
 		$this->initialize();
 	}
 
-	private function initialize()
+	private function initialize(): void
 	{
 		$this->isSMTP();
 		$debug = DEBUG ?? false;
@@ -36,7 +36,7 @@ class Mailer extends PHPMailer
 		$this->isHTML(true);
 	}
 
-	public function compose($debug_address = null)
+	public function compose(string $debug_address = null): void
     {
         //$this->validateCrucialAttributes();
 		$this->setFrom($this->From);
@@ -54,9 +54,13 @@ class Mailer extends PHPMailer
 		$this->msgHTML($this->Body);
 	}
 
-	private function validateCrucialAttributes()
+	private function validateCrucialAttributes(): void
 	{
 		$crucial_attributes = ['From', 'receiver', 'Host', 'Password', 'Username'];
+		if(empty(DEBUG)){
+            $crucial_attributes[] = 'Password';
+            $crucial_attributes[] = 'Username';
+        }
 		$optional_attributes = ['Subject', 'Body'];
 
 		foreach($crucial_attributes as $att_name){
@@ -72,14 +76,14 @@ class Mailer extends PHPMailer
 		}
 	}
 
-	private function setConfiguration($settings = [])
+	private function setConfiguration(array $settings = [])
 	{
 		array_walk($settings, function($val, $key){
 			$this->set($key, $val);
 		});
 	}
 
-	public function set($attribute, $value = null)
+	public function set(string $attribute, $value = null): void
 	{
 		$names_to_check = [$attribute, ucfirst($attribute)];
 		$names_to_check[] = $this->attribute_alias[$attribute] ?? null;
@@ -99,7 +103,7 @@ class Mailer extends PHPMailer
 
 
 
-	public function setGlobalOptions()
+	public function setGlobalOptions(): void
 	{
 		$smtp_settings = SETTINGS[$this->smtp_settings_index] ?? [];
 		$possible_keys = array_flip(self::$attributes_from_settings);
@@ -108,7 +112,7 @@ class Mailer extends PHPMailer
 	}
 
 
-	public function sendAway($debug_address = null)
+	public function sendAway(string $debug_address = null)
 	{
 		$this->compose($debug_address);
 		return $this->send();
