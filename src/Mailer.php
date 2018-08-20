@@ -83,7 +83,7 @@ class Mailer extends PHPMailer
 		});
 	}
 
-	public function set(string $attribute, $value = null): void
+	public function set(string $attribute, $value = null)
 	{
 		$names_to_check = [$attribute, ucfirst($attribute)];
 		$names_to_check[] = $this->attribute_alias[$attribute] ?? null;
