@@ -1,7 +1,8 @@
 <?php
 
 namespace Fridde;
-use PHPMailer;
+
+use PHPMailer\PHPMailer\PHPMailer;
 
 class Mailer extends PHPMailer
 {
