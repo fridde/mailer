@@ -34,7 +34,7 @@ class Mailer extends PHPMailer
 		$this->CharSet = 'utf-8';
         $this->Encoding = '8bit';
 		$this->SMTPOptions['ssl'] = ['verify_peer' => false, 'verify_peer_name' => false, 'allow_self_signed' => true];
-		$this->isHTML(true);
+		$this->isHTML();
 	}
 
 	public function compose(string $debug_address = null): void
@@ -77,7 +77,7 @@ class Mailer extends PHPMailer
 		}
 	}
 
-	private function setConfiguration(array $settings = [])
+	private function setConfiguration(array $settings = []): void
 	{
 		array_walk($settings, function($val, $key){
 			$this->setValue($key, $val);
@@ -113,8 +113,8 @@ class Mailer extends PHPMailer
 	}
 
 
-	public function sendAway(string $debug_address = null)
-	{
+	public function sendAway(string $debug_address = null): bool
+    {
 		$this->compose($debug_address);
 		return $this->send();
 	}
